@@ -36,6 +36,13 @@
 - 密码 / token 要写进本地 env 文件时，给我一条可直接粘贴的 zsh 命令自己跑（`read -rs` 不回显，只回显字符数）；非密变量你直接写
 - 纠错和经验放进能放的最硬一层：架构 > lint / 测试 / hook > CLAUDE.md / 文档；进度和状态不记，git 能查到
 
+## 目录
+
+- git 仓库统一放 `~/Documents/workspace/<仓库名>`；2026-10-19 已把 shift / creok_live / creok_web / live-event-overlay / claude-config 从 `~/Downloads` 整体搬过来，新 clone / 新建的仓库也放这里，不放 Downloads
+- 旧路径 `/Users/l/Downloads/<仓库名>` 已不存在：文档、脚本、旧会话、旧 worktree 分支里看到就换成新路径，不要在 Downloads 重建或加 symlink
+- worktree 用相对路径（全局 `worktree.useRelativePaths=true`），以后再搬仓库不用 `git worktree repair`
+- 文稿夹受 macOS 隐私保护：launchd / cron 跑的后台进程（如 resume-intake 的 node）要单独授权「文稿」访问，没授权会卡在启动不报错；brew 升级 node 后要重新授权，并改 plist 里写死的 node 路径
+
 ## skill
 
 - 建议我新建 skill 前先过判据：只为「模型不知道的私有口径 / 凭证 / 字段」和「每次做法必须一致的确定性流程」建
