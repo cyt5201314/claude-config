@@ -38,8 +38,10 @@ curl -fsSL https://raw.githubusercontent.com/cyt5201314/claude-config/main/cloud
 
 `cloud-setup.sh` 装 `CLAUDE.md`，并把 commit 检查装成 git `commit-msg` hook（全局 `core.hooksPath`）。不走 Claude Code 的 hook：Anthropic 托管环境不跑用户级 settings 里的 hook。
 
+`skills/` 下每个目录整包装到云端的 `~/.claude/skills/<名字>`（下载仓库 tarball，同名目录先删再放）。现有：`yomiyasu`（日语推敲，上游 nanaism，MIT）。本机 `~/.claude/skills/yomiyasu` 目前是另一份拷贝，改 skill 要两边一起改。
+
 环境快照最多缓存约 7 天；push 后要立刻生效，就改一下 setup script 里的任意注释触发重建。
-新会话里 `/context` 能看到 `/root/.claude/CLAUDE.md`，且 `git config --global core.hooksPath` 输出 `/root/.claude/git-hooks` 即生效。
+新会话里 `/context` 能看到 `/root/.claude/CLAUDE.md`，`git config --global core.hooksPath` 输出 `/root/.claude/git-hooks`，且 `ls ~/.claude/skills` 列出 `yomiyasu` 即生效。
 
 ## 验证
 

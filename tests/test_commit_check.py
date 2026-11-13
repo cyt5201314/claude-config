@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tarfile
 import tempfile
 from pathlib import Path
 
@@ -109,11 +110,32 @@ def commit_msg_entry_cases(tmp):
     commit_flow_cases(repo)
 
 
+def tree_diff(a, b):
+    """递归比较两个目录：多出或缺少的文件、内容不同或可执行位不同的文件。"""
+    files = lambda root: {p.relative_to(root) for p in root.rglob("*") if p.is_file()} if root.is_dir() else set()
+    fa, fb = files(a), files(b)
+    if fa != fb or not fa:
+        return [str(p) for p in sorted(fa ^ fb)] or ["(empty)"]
+    return [
+        str(p)
+        for p in sorted(fa)
+        if (a / p).read_bytes() != (b / p).read_bytes() or os.access(a / p, os.X_OK) != os.access(b / p, os.X_OK)
+    ]
+
+
 def cloud_setup_cases(tmp):
     """用临时 HOME 和 file:// 地址模拟 setup script，跑两遍确认可重复。"""
     home = tmp / "home"
     home.mkdir()
-    env = {**os.environ, "HOME": str(home), "CLAUDE_CONFIG_RAW": ROOT.as_uri()}
+    tarball = tmp / "claude-config.tar.gz"
+    with tarfile.open(tarball, "w:gz") as tar:   # 和 codeload 一样：最外层一个「仓库名-分支」目录
+        tar.add(ROOT / "skills", arcname="claude-config-main/skills")
+    env = {
+        **os.environ,
+        "HOME": str(home),
+        "CLAUDE_CONFIG_RAW": ROOT.as_uri(),
+        "CLAUDE_CONFIG_TARBALL": tarball.as_uri(),
+    }
     env.pop("GIT_CONFIG_GLOBAL", None)
     script = (ROOT / "cloud-setup.sh").read_text()
     for attempt in (1, 2):
@@ -126,6 +148,18 @@ def cloud_setup_cases(tmp):
         ["git", "config", "--global", "--get-all", "core.hooksPath"], capture_output=True, text=True, env=env
     )
     report(configured.stdout.strip() == str(home / ".claude/git-hooks"), "cloud-setup sets one absolute hooksPath")
+    for skill in sorted(p for p in (ROOT / "skills").iterdir() if p.is_dir()):
+        diff = tree_diff(skill, home / ".claude/skills" / skill.name)
+        report(not diff, f"cloud-setup installs skill {skill.name} {diff[:3]}")
+    sample = tmp / "sample.md"
+    sample.write_text("この説明は、テストです。\n")
+    lint = subprocess.run(
+        [sys.executable, str(home / ".claude/skills/yomiyasu/scripts/yomiyasu_lint.py"), "-"],
+        input=sample.read_text(),
+        capture_output=True,
+        text=True,
+    )
+    report(lint.returncode == 0 and "見直し候補" in lint.stdout, f"installed yomiyasu lint runs {lint.stderr.strip()}")
     repo = tmp / "cloud"
     repo.mkdir()
     commit_flow_cases(repo, env=env)
