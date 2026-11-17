@@ -13,7 +13,7 @@
 | 值的前缀 | 派发方式 | 限制 |
 | --- | --- | --- |
 | `gpt-*` | `target.providerInstanceId` = displayName「ChatGPT - Personal」的 codex 实例（id 用 `orchestrator_capabilities` 查，别写死），`model` = slug，`options.reasoningEffort` = 档位 | 会改代码的任务用 `isolation: "worktree"` |
-| `gemini-*` | `providerInstanceId: "antigravity"`，`options.thinking_level` = 档位（只有 low / medium / high） | 不跑 shell：Antigravity 每条 shell 命令都要人工批准，会卡住。审查、裁判只读文件给结论；arena / architect 的 runner 只写自己那一份输出文件（改文件不用批准） |
+| `gemini-*` | `providerInstanceId: "antigravity"`，`options.thinking_level` = 档位（只有 low / medium / high） | 不跑 shell：主线程 `auto` 时 T3 把 Gemini 子任务定为 `auto-accept-edits`，每条 shell 命令都要人工批准，会卡住；`~/.gemini/config/config.json` 的 `globalPermissionGrants.allow` 白名单对 T3 子任务不生效（2026-11-16 实测，重启 Antigravity 后 `pwd` 仍要批准），`full-access` 又不能高于主线程。审查、裁判只读文件给结论；arena / architect 的 runner 只写自己那一份输出文件（改文件不用批准） |
 
 Gemini 不能跑 `git diff`：派它审查或当裁判前，总指挥先把 diff、候选方案写成文件（放 scratchpad），brief 里给绝对路径。
 
