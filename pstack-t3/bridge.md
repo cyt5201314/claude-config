@@ -13,7 +13,7 @@
 | 值的前缀 | 派发方式 | 限制 |
 | --- | --- | --- |
 | `gpt-*` | `target.providerInstanceId` = displayName「ChatGPT - Personal」的 codex 实例（id 用 `orchestrator_capabilities` 查，别写死），`model` = slug，`options.reasoningEffort` = 档位 | 会改代码的任务用 `isolation: "worktree"` |
-| `gemini-*` | `providerInstanceId: "antigravity"`，`options.thinking_level` = 档位（只有 low / medium / high） | 不跑 shell：主线程 `auto` 时 T3 把 Gemini 子任务定为 `auto-accept-edits`，每条 shell 命令都要人工批准，会卡住；`~/.gemini/config/config.json` 的 `globalPermissionGrants.allow` 白名单对 T3 子任务不生效（2026-11-16 实测，重启 Antigravity 后 `pwd` 仍要批准），`full-access` 又不能高于主线程。审查、裁判只读文件给结论；arena / architect 的 runner 只写自己那一份输出文件（改文件不用批准） |
+| `gemini-*` | `providerInstanceId: "antigravity"`，`options.thought_level` = 档位（只有 low / medium / high） | 不跑 shell：主线程 `auto` 时 T3 把 Gemini 子任务定为 `auto-accept-edits`，每条 shell 命令都要人工批准，会卡住；`~/.gemini/config/config.json` 的 `globalPermissionGrants.allow` 白名单对 T3 子任务不生效（2026-11-16 实测，重启 Antigravity 后 `pwd` 仍要批准），`full-access` 又不能高于主线程。审查、裁判只读文件给结论；arena / architect 的 runner 只写自己那一份输出文件（改文件不用批准） |
 
 Gemini 不能跑 `git diff`：派它审查或当裁判前，总指挥先把 diff、候选方案写成文件（放 scratchpad），brief 里给绝对路径。
 
@@ -22,6 +22,10 @@ Gemini 不能跑 `git diff`：派它审查或当裁判前，总指挥先把 diff
 `gpt-*` 的写代码任务在自己的 worktree 里：做完在该 worktree 的分支上 commit，最后一行报 `worktree <路径>, branch <名>, HEAD <SHA>`。总指挥在自己的 checkout 里 `git merge` / `cherry-pick` 那个分支再验证、审查；不信它的「done」，自己看 diff。
 
 Claude 值（`fable` / `opus` / `sonnet` / `haiku`）照旧用 `Agent`，`subagent_type: "pstack:poteto-agent"` 或 skill 指定的类型。
+
+## arena 裁判（覆盖 arena Phase C 的「只派一个裁判」）
+
+`arena cross-judge pool` 里每个与主线程不同家族的条目都各派一个只读裁判，同时派出（2026-11-18 用户指定）。每个裁判拿同一份评分标准，按路径标签给每个候选逐条打分并推荐底子。Phase D 总指挥把所有裁判和自己的打分对照：全部选中同一版就是确认；有分歧就读各方理由，判断是谁有偏见、还是评分标准写得含糊。某个裁判报错或没交结果，照常用剩下的，并在汇报里写明。综合说明里列出每个裁判的结论。
 
 ## brief
 
