@@ -7,8 +7,8 @@ T3 Code installed under ~/.t3; nothing here stores credentials.
     seat.py gpt    --model gpt-6.2-astra   --effort max  --cwd DIR --brief FILE --out FILE [--write]
     seat.py gemini --model gemini-4-carbon --effort high --cwd DIR --brief FILE --out FILE
 
-Exit codes: 0 ok, 2 usage or isolation guard, 3 T3 Code session, 4 CLI not
-found, 5 the CLI failed (auth, quota, bad model), 6 timeout.
+Exit codes: 0 ok, 2 usage or isolation guard, 4 CLI not found, 5 the CLI
+failed (auth, quota, bad model), 6 timeout.
 """
 import argparse
 import json
@@ -21,7 +21,7 @@ from pathlib import Path
 
 T3_TOOLS = Path.home() / ".t3" / "tools"
 
-EXIT_USAGE, EXIT_T3, EXIT_NO_CLI, EXIT_FAILED, EXIT_TIMEOUT = 2, 3, 4, 5, 6
+EXIT_USAGE, EXIT_NO_CLI, EXIT_FAILED, EXIT_TIMEOUT = 2, 4, 5, 6
 
 
 def die(code, message):
@@ -192,9 +192,6 @@ def main():
     parser.add_argument("--write", action="store_true", help="gpt only: let the seat edit files and run commands in --cwd")
     parser.add_argument("--timeout", type=int, default=1500, help="seconds (default 1500)")
     args = parser.parse_args()
-
-    if os.environ.get("CLAUDE_CODE_ENTRYPOINT") == "t3-code":
-        die(EXIT_T3, "T3 Code session: dispatch through delegate_task per ~/.claude/pstack-t3/bridge.md")
 
     args.cwd, args.brief, args.out = args.cwd.resolve(), args.brief.resolve(), args.out.resolve()
     if not args.cwd.is_dir():

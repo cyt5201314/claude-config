@@ -13,22 +13,16 @@
 - `~/.claude/rules` → `rules/`（整个目录软链接，`/pstack:setup-pstack` 整份重写 `pstack-models.md` 时也写进仓库）。
   - `pstack-models.md`：纯 Claude 的角色模型表，Claude app 等所有入口都用。
   - `pstack-effort.md`：Fable / Opus 的档位上限。
-  - `pstack-external.md`：T3 Code 以外的本机会话里，给方案 / review 面板加 GPT、Gemini 席位，经 `pstack-ext/seat.py` 调本机 CLI。
+  - `pstack-external.md`：本机会话里给方案 / review 面板加 GPT、Gemini 席位，经 `pstack-ext/seat.py` 调本机 CLI。
 - `~/.claude/pstack-ext` → `pstack-ext/`：`seat.py` 用 T3 Code 装在 `~/.t3/tools` 下的 Codex / Antigravity CLI 跑一个外部席位，复用它们的登录；Gemini 席位和带 `--write` 的 GPT 席位拒绝在仓库主 checkout 里跑。
-- `~/.claude/pstack-t3` → `pstack-t3/`：只在 T3 Code 里生效的多家族配置。`models.md` 替换上面的模型表，`bridge.md` 写 GPT / Gemini 怎么经 T3 `delegate_task` 派发。
-- `~/.claude/hooks/pstack-t3-context.sh` → `hooks/` 同名文件，在 `settings.json` 里注册成 SessionStart hook：
-  `CLAUDE_CODE_ENTRYPOINT=t3-code` 时输出一行 `[pstack-t3]` 提示去读 `bridge.md`，其他入口不输出。
 
 新机器：
 
 ```bash
 R=~/Documents/workspace/claude-config
 ln -s $R/rules ~/.claude/rules
-ln -s $R/pstack-t3 ~/.claude/pstack-t3
 ln -s $R/pstack-ext ~/.claude/pstack-ext
-ln -s $R/hooks/pstack-t3-context.sh ~/.claude/hooks/pstack-t3-context.sh
 ln -s $R/skills/yomiyasu ~/.claude/skills/yomiyasu
-# settings.json 的 hooks.SessionStart 加：{"hooks":[{"type":"command","command":"sh ~/.claude/hooks/pstack-t3-context.sh"}]}
 ```
 
 ## 云端

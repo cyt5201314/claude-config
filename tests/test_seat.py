@@ -96,7 +96,7 @@ def main():
         git(repo, "worktree", "add", "-q", str(tree))
         brief.write_text(BRIEF)
         base = ["--model", "m", "--effort", "low", "--brief", brief, "--out", out]
-        stub = {"CLAUDE_CODE_ENTRYPOINT": "test", "HOME": str(home), "STUB_CALLED": str(called), "STUB_PID": str(pidfile)}
+        stub = {"HOME": str(home), "STUB_CALLED": str(called), "STUB_PID": str(pidfile)}
 
         def refused(name, *args, needle, env=None):
             called.unlink(missing_ok=True)
@@ -108,9 +108,6 @@ def main():
             r = seat(*args, env=stub)
             text = out.read_text() if out.is_file() else ""
             check(name, r.returncode == 0 and expect in text, r.stdout + r.stderr)
-
-        r = seat("gpt", "--cwd", repo, *base, env={**stub, "CLAUDE_CODE_ENTRYPOINT": "t3-code"})
-        check("refuses inside T3 Code (exit 3)", r.returncode == 3, r.stderr)
 
         refused("gemini refuses a primary checkout", "gemini", "--cwd", repo, *base, needle="primary checkout")
         refused("gpt --write refuses a primary checkout", "gpt", "--cwd", repo, *base, "--write", needle="primary checkout")
@@ -190,14 +187,13 @@ def main():
                   f"exit {proc.returncode}, grandchild {grandchild}")
 
         if live:
-            real = {"CLAUDE_CODE_ENTRYPOINT": "test"}
-            r = seat("gpt", "--model", "no-such-model", "--cwd", repo, "--effort", "low", "--brief", brief, "--out", out, env=real)
+            r = seat("gpt", "--model", "no-such-model", "--cwd", repo, "--effort", "low", "--brief", brief, "--out", out)
             check("gpt bad model fails loudly (exit 5)", r.returncode == 5, r.stdout + r.stderr)
 
             for vendor, model, cwd in (("gpt", "gpt-6.2-astra", repo), ("gemini", "gemini-4-carbon", tree)):
                 seat_out = tmp / f"{vendor}.txt"
                 r = seat(vendor, "--model", model, "--cwd", cwd, "--effort", "low", "--brief", brief,
-                         "--out", seat_out, "--timeout", "300", env=real)
+                         "--out", seat_out, "--timeout", "300")
                 text = seat_out.read_text() if seat_out.is_file() else ""
                 check(f"{vendor} seat returns the seeded finding", r.returncode == 0 and "FINDING:" in text, r.stdout + r.stderr + text)
                 check(f"{vendor} seat left calc.py untouched", (cwd / "calc.py").read_text() == BUG)
