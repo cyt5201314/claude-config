@@ -188,6 +188,41 @@ def main():
     check("a task that was already a subtask is not removed from the tasklist again",
           not any(args[0] == "api" for args, _, _ in calls), str(calls))
 
+    def moves_after(ops):
+        calls.clear()
+        done = []
+        board.execute(fake, snap, {"ops": ops}, "ME", "2026-11-19", done)
+        return [(args[2], data) for args, data, _ in calls if args[0] == "api"], done
+
+    moves, _ = moves_after([{"op": "complete", "task": "T2"}])
+    check("without done_section a completed task stays in its section", moves == [], str(moves))
+    fake.cfg["done_section"] = "完成"
+    fake.sections["完成"] = "S-done"
+    moves, done = moves_after([{"op": "complete", "task": "T2"}])
+    check("with done_section a completed task moves to that section",
+          moves == [("/open-apis/task/v2/tasks/T2/add_tasklist", {"tasklist_guid": "TL", "section_guid": "S-done"})]
+          and done[0].get("section") == "完成" and "incomplete" not in done[0], str(moves))
+    order = [args[:2] if args[0] == "task" else args[2].rsplit("/", 1)[-1] for args, _, _ in calls]
+    check("the task is completed before it is moved", order == [("task", "+complete"), "add_tasklist"], str(order))
+    moves, _ = moves_after([{"op": "complete", "task": "T1a"}])
+    check("a completed subtask is not added to the tasklist", moves == [], str(moves))
+
+    def failing_move(*args, data=None, params=None):
+        if args[0] == "api" and args[2].endswith("/add_tasklist"):
+            raise board.BoardError("boom")
+        return fake_lark(*args, data=data, params=params)
+
+    board.lark = failing_move
+    written = []
+    try:
+        board.execute(fake, snap, {"ops": [{"op": "complete", "task": "T2"}]}, "ME", "2026-11-19", written)
+    except board.BoardError:
+        pass
+    check("a complete whose move fails is reported as incomplete",
+          [(d["guid"], d.get("incomplete")) for d in written] == [("T2", True)], str(written))
+    board.lark = fake_lark
+    del fake.cfg["done_section"], fake.sections["完成"]
+
     def lark_failing_on(prefix):
         def failing(*args, data=None, params=None):
             if args[:len(prefix)] == prefix:

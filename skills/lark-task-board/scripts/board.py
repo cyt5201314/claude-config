@@ -77,6 +77,9 @@ class Board:
         sections = lark("task", "sections", "list",
                         params={"resource_type": "tasklist", "resource_id": self.tasklist})
         self.sections = {s["name"]: s["guid"] for s in sections.get("items", []) if s.get("name")}
+        done_section = cfg.get("done_section")
+        if done_section and done_section not in self.sections:
+            raise BoardError(f"配置里的 done_section「{done_section}」不是清单的分组")
         fields = lark("task", "custom_fields", "list",
                       params={"resource_type": "tasklist", "resource_id": self.tasklist})
         by_name = {f["name"]: f for f in fields.get("items", [])}
@@ -430,6 +433,12 @@ def execute(board, snap, plan, me, today, done):
             lark("task", "+complete", "--task-id", op["task"])
             if "incomplete" not in entry:
                 started(entry)
+            done_section = board.cfg.get("done_section")
+            if done_section and op["task"] in top_level:
+                # Subtasks are not in the tasklist; moving one would add a second card to the board.
+                task_api(op["task"], "add_tasklist",
+                         {"tasklist_guid": board.tasklist, "section_guid": board.sections[done_section]})
+                entry["section"] = done_section
         del entry["incomplete"]
 
 

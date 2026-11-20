@@ -25,7 +25,7 @@ python3 ~/.claude/skills/lark-task-board/scripts/board.py snapshot
 | 用户的概念 | Lark 里 |
 |---|---|
 | 大类、项目 | 两个自定义单选字段。项目属于哪个大类写在配置的 `category_of` 里，建任务只给项目 |
-| 状态 | 分组：待整理 / 本周要做 / 进行中 / 等别人。做完用任务自带的「已完成」 |
+| 状态 | 分组：待整理 / 本周要做 / 进行中 / 等别人。做完用任务自带的「已完成」；配置了 `done_section` 时，标完成的任务还会移到那个分组 |
 | 大任务 → 小任务 | 任务 → 子任务。子任务不单独放进清单，否则看板上会多出一张卡 |
 
 实际的分组名、项目名以 `snapshot` 输出的 `sections`、`projects` 为准。
@@ -112,11 +112,14 @@ python3 ~/.claude/skills/lark-task-board/scripts/board.py snapshot
   "tasklist_guid": "<清单 guid，清单链接里 guid= 后面那段>",
   "category_field": "大类",
   "project_field": "项目",
-  "category_of": {"<项目名>": "<大类名>"}
+  "category_of": {"<项目名>": "<大类名>"},
+  "done_section": "<放已完成任务的分组名，可以不写>"
 }
 ```
 
-分组和字段选项的 ID 每次从 Lark 现读，不写在配置里。配置和面板对不上（项目名不是字段选项）时脚本会直接报错。
+分组和字段选项的 ID 每次从 Lark 现读，不写在配置里。配置和面板对不上（项目名不是字段选项、`done_section` 不是分组）时脚本会直接报错。
+
+写了 `done_section` 时，`complete` 先把任务标完成，再把它移到这个分组；子任务不在清单里，不移。没写就留在原分组。这个分组只放做完的任务，`create`、`move` 不要用它。
 
 ## 改这个 skill
 
