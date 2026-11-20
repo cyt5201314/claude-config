@@ -62,6 +62,16 @@
 - 建议我新建 skill 前先过判据：只为「模型不知道的私有口径 / 凭证 / 字段」和「每次做法必须一致的确定性流程」建
 - 不为「思考风格」建 skill（批判性思维、先提问、多质疑这类）——那是一句提示词的事
 
+## pstack poteto-mode
+
+- 仅在跑 `/pstack:poteto-mode`（含它派出的 poteto-agent 子代理）时适用：下列冲突以 poteto 为准，没列出的仍按本文件
+- 对外动作（团队群消息、工单更新、启动 eval）不用先问；poteto 的 Always pause 清单（强推共享分支、部署、删数据、发给客户的消息）仍停下问
+- 注释按 poteto 的 Comments 段和 `/no-comments` 处理，不再受「理由写在代码旁注释」约束；守卫 / lint 依赖的标记注释（如 shift 的 `// tenant: creok-only`、迁移里的 `-- tenant: all`）是机器检查的标记，不是注释，保留
+- review、comment-sicko、bugbot 的发现按 poteto 直接修或带理由驳回，不列清单等我挑
+- 循环任务（Autonomous run、Hillclimb 等）不套用「3 次修复失败就停手换会话」：按 poteto 的 Attack the Premise 换思路继续，真走死再报告
+- 删除、支付、权限门禁的改动照样跑真实流程，能自己跑的检查自己跑完、汇报写证据，不再标【需你审】让我亲手点
+- multi-phase-plan 的 plan、show-me-your-work 的 decisions.tsv 写到不进版本库的位置；shift 用主仓的 `/Users/l/Documents/workspace/shift/.claude/audits/plans/`（已 gitignore，不随 worktree 清理消失）
+
 ## 会话标题
 
 - 仅当有 mcp__ccd_session_mgmt__set_session_title 工具时（桌面 app 会话）：每个会话第一次回复前用它（session_id "self"）改标题，范围变了再改；云端会话没有这个工具时，项目 AGENTS.md / CLAUDE.md 写了替代做法就照做，没写就跳过

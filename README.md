@@ -14,6 +14,7 @@
   - `pstack-models.md`：纯 Claude 的角色模型表，Claude app 等所有入口都用。
   - `pstack-effort.md`：Fable / Opus 的档位上限。
   - `pstack-external.md`：本机会话里给方案 / review 面板加 GPT、Gemini 席位，经 `pstack-ext/seat.py` 调本机 CLI。
+  - `pstack-web.md`：跑 pstack 改前端 / UI 前先用 modern-web-guidance 查现代原生 API（本机 skill 在 `~/.agents/skills/modern-web-guidance`，不在本仓库）。
 - `~/.claude/pstack-ext` → `pstack-ext/`：`seat.py` 用 T3 Code 装在 `~/.t3/tools` 下的 Codex / Antigravity CLI 跑一个外部席位，复用它们的登录；Gemini 席位和带 `--write` 的 GPT 席位拒绝在仓库主 checkout 里跑。
 
 新机器：
