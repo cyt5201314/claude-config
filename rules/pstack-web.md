@@ -1,6 +1,6 @@
 # pstack 改 UI 时的原生 API 优先
 
-跑 `/pstack:*`（含 poteto-agent 子代理）改前端 / UI 时，写代码前先用 modern-web-guidance 查现代原生 API，不凭记忆写老方案：
+跑 `/pstack:*`（含它派出的子代理）改前端 / UI 时，写代码前先用 modern-web-guidance 查现代原生 API，不凭记忆写老方案：
 
 - `npx modern-web-guidance@latest search "<需求>"` 拿候选，再 `retrieve "<id>"` 读一篇；一次只取需要的那篇。
 - Baseline 目标用默认的 Widely available，不在这里写年份；`set-allow-volatile-features` / `set-allow-origin-trials` 不开。想用更新的特性时，在该项目单独放行并在汇报里写明。

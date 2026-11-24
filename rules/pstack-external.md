@@ -13,7 +13,7 @@ pstack 的 Claude Code 适配文档把非 Claude 的值降成会话模型，等�
 - `interrogate reviewers`：加 `gpt-6.2-astra max`、`gemini-4-carbon high`
 - poteto-mode 的「Diverse review and design panels」：同 `arena runners`
 
-写代码的角色（feature、bug-fix、swarm workers 等）不加外部席位。
+写代码的角色（feature、bug-fix、swarm workers 等）不加外部席位。Feature 第 4 步用 arena 写实现时同样不加：arena runners 只派 Claude 席位；外部席位只进出方案 / 设计 / 审查的面板。
 
 ## 家族
 
@@ -34,7 +34,8 @@ pstack 的 Claude Code 适配文档把非 Claude 的值降成会话模型，等�
 非 Claude 的席位读不到 `~/.claude`，也没有 skill 机制，brief 必须自带：
 
 - 开头：先完整读 poteto-mode 的 SKILL.md（含 Principles 索引），再读 `agents/poteto-agent.md`，以 poteto-agent 身份工作；用到某条原则时读对应 `skills/principle-*/SKILL.md`。给绝对路径，用 `~/.claude/plugins/cache/cursor-plugins/pstack/*/` 下当前版本解析。
-- `~/.claude/CLAUDE.md`「pstack poteto-mode」一节的口径（注释、review 处理、计划落盘位置）。
+- `~/.claude/CLAUDE.md`「pstack poteto-mode」一节的口径（注释、计划落盘位置）。
+- 本任务的判据表（CLAUDE.md「开发流程」），它就是交付的 bar；不向用户提问，判据定不了的写进交付里。
 - 不派子任务、不 push、不合 main、不改 `~/.claude`；写代码的任务 commit 在自己分支上。
 
 ## 派发
