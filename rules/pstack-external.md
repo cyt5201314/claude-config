@@ -9,8 +9,8 @@ pstack 的 Claude Code 适配文档把非 Claude 的值降成会话模型，等�
 加在 `pstack-models.md` 对应行之后，不替换那一行的 Claude 席位：
 
 - `arena runners`：加 `gpt-6.2-astra max`、`gemini-4-carbon high`
-- `arena cross-judge pool`：`gemini-4-carbon high`、`gpt-6.2-astra max`。两个都派，各出一份打分，照下面「arena 裁判」
-- `interrogate reviewers`：加 `gpt-6.2-astra max`、`gemini-4-carbon high`
+- `arena cross-judge pool`：`gpt-6.2-astra max`、`gemini-4-carbon high`。只派一个，照下面「arena 裁判」
+- `interrogate reviewers`：不加外部席位，只派 `pstack-models.md` 那一行的 Claude 席位，也不套下面「去掉写它的那一家」（不然审 Claude 写的代码一个席位都不剩）
 - poteto-mode 的「Diverse review and design panels」：同 `arena runners`
 
 写代码的角色（feature、bug-fix、swarm workers 等）不加外部席位。Feature 第 4 步用 arena 写实现时同样不加：arena runners 只派 Claude 席位；外部席位只进出方案 / 设计 / 审查的面板。
@@ -25,9 +25,9 @@ pstack 的 Claude Code 适配文档把非 Claude 的值降成会话模型，等�
 - GPT 与 Claude 档位不等价：GPT `max` ≈ Claude high～xhigh，GPT `xhigh` ≈ Claude medium。
 - Claude（Fable / Opus）的档位上限照 `~/.claude/rules/pstack-effort.md`。
 
-## arena 裁判（覆盖 arena Phase C 的「只派一个裁判」）
+## arena 裁判
 
-`arena cross-judge pool` 里每个与主线程不同家族的条目都各派一个只读裁判，同时派出（2026-11-18 用户指定）。每个裁判拿同一份评分标准，按路径标签给每个候选逐条打分并推荐底子。Phase D 总指挥把所有裁判和自己的打分对照：全部选中同一版就是确认；有分歧就读各方理由，判断是谁有偏见、还是评分标准写得含糊。某个裁判报错或没交结果，照常用剩下的，并在汇报里写明。综合说明里列出每个裁判的结论。
+照 arena Phase C 只派一个只读裁判：`gpt-6.2-astra max`（默认只读，不用隔离目录）。它照「退出码」算掉线后才换池里的下一个 `gemini-4-carbon high`，这是裁判池的顺位，不算擅自换家族；两个都掉线就照 Phase C 跳过裁判，并在汇报里写明。
 
 ## brief
 
@@ -49,10 +49,9 @@ python3 ~/.claude/pstack-ext/seat.py gemini --model gemini-4-carbon --effort hig
 
 跑完读 `--out` 的文件，它就是这个席位的交付。脚本最后会打印 `--cwd` 的 `git status`。
 
-- **GPT 默认只读**：能读文件、跑命令，写不了（Codex `read-only` 沙箱，2026-11-19 实测拦住了写文件）。裁判和只看代码的审查用默认；要自己写产物或复现脚本的席位（arena runner、interrogate adversary）加 `--write`，这时 `--cwd` 必须是它自己的 worktree。
+- **GPT 默认只读**：能读文件、跑命令，写不了（Codex `read-only` 沙箱，2026-11-19 实测拦住了写文件）。裁判和只看代码的审查用默认；要自己写产物的席位（如 arena runner）加 `--write`，这时 `--cwd` 必须是它自己的 worktree。
 - **Gemini 关不掉写权限**：带 `--sandbox` 照样写文件、跑命令（同日实测）。`--cwd` 必须是它自己的 git worktree，或一个上下都没有 `.git` 的目录（不带 `.git` 的副本）；主 checkout、装着仓库的父目录、git 报错的目录，脚本都拒绝（退出码 2）。带 `--write` 的 GPT 席位同样受这条检查。brief 里写明「只在当前目录内读写」；跑完看脚本打印的 `git status`，出现 brief 没要求的改动就在汇报里写明。
 - **Gemini 不能用 `--mode plan`**：它不给结论，只写一份计划文件等批准。
-- interrogate 的发现照旧要在 Verify 阶段由总指挥重跑命令确认，外部席位自称跑过也一样。
 
 ## 退出码
 

@@ -81,6 +81,7 @@
   - multi-phase-plan 是你自己选的中间步骤时，写完计划接着执行，不停下等我说 go；我点名要计划时照旧交回计划后停下。第 4 步「改交互的 PR merge 前等我审」就是交付时我的认可，不另设关卡
   - `/no-comments` 第 5 步的编码不等我批：能在本次范围内编码的直接编码，其余按 poteto 删掉并写进汇报
   - 派子代理 / 外部席位时，brief 里的判据表就是 worker.md 说的 bar
+  - 路由到 `interrogate` 的步骤都不跑（Non-negotiables 的 Contested design、Feature 第 7 步、Bug fix 第 2 步的 interrogate 扇出）：有争议的设计靠判据表和真实流程验证兜底。我点名 `/interrogate` 时照跑
   - 仓库有自己的合入方式时（shift：`land` skill，只合本地 main、不 push），用它代替 Opening a PR / Babysit / Shipping 和 worker.md 的开 PR：照仓库规则等我认可后由主线程合入，做完不自动合。仓库没有时照 poteto 开 PR，push 功能分支前先问我
   - multi-phase-plan 的 plan、show-me-your-work 的 decisions.tsv 写到不进版本库的位置，不照 figure-it-out 提交进 PR；shift 用主仓的 `/Users/l/Documents/workspace/shift/.claude/audits/plans/`（已 gitignore，不随 worktree 清理消失）
   - 回复：五段汇报放最前；poteto 要求的原则说明和 playbook 的 Reply 内容放在五段之后
