@@ -29,6 +29,8 @@ APPROVE = re.compile(
 NEGATE = re.compile(r"(?:不要|别|不用|不必|无需|不需要)\s*(?:记|写记忆)")
 
 MEMORY_IN_COMMAND = re.compile(r"\.claude/projects\b.*?/memory(?:/|\b)(?!-)", re.S)
+MEMORY_PATH = re.compile(r"/memory(?:/|\b)(?!-)")
+SEGMENT_BREAK = re.compile(r"&&|\|\||[;|]")
 HARMLESS_REDIRECT = re.compile(r"\d?>\s*/dev/null|\d?>&\d")
 WRITES_IN_COMMAND = re.compile(
     r">|\btee\b|\bsed\s+(?:-\w+\s+)*-i|\bperl\s+-\w*i|\b(?:rm|mv|cp|touch|mkdir|ln|truncate|rsync)\b"
@@ -62,7 +64,8 @@ def touches_memory(data):
         command = tool_input.get("command") or ""
         if not MEMORY_IN_COMMAND.search(command):
             return False
-        return bool(WRITES_IN_COMMAND.search(HARMLESS_REDIRECT.sub("", command)))
+        segments = SEGMENT_BREAK.split(HARMLESS_REDIRECT.sub("", command))
+        return any(MEMORY_PATH.search(s) and WRITES_IN_COMMAND.search(s) for s in segments)
     return False
 
 
