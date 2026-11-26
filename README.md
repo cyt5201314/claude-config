@@ -8,6 +8,22 @@
 
 `~/.claude/hooks/require-commit-verify-rollback.py` 也是软链接，指向 `hooks/` 下的同名文件，在 `~/.claude/settings.json` 里注册成 PreToolUse Bash hook。
 
+### 记忆闸门
+
+`hooks/memory-gate.py`：用户在当前这条消息里批准（「记住」「记 1、3」「把第 2 条记忆删掉」等），才能改 `~/.claude/projects/*/memory/`；否则拦下，让模型把候选写进汇报。批准过的改动自动 commit 到本地记忆仓库，message 里带会话 id 和用户批准时的原话。规则写在 `CLAUDE.md`「记忆」。
+
+- `~/.claude/hooks/memory-gate.py` 软链接到这里，在 `~/.claude/settings.json` 的 `UserPromptSubmit`、`PreToolUse`、`PostToolUse` 各注册一次（后两个 matcher：`Write|Edit|MultiEdit|NotebookEdit|Bash`）。
+- 记忆仓库的工作区是 `~/.claude/projects`，`.gitignore` 只放行 `*/memory/`；git 目录在 `~/Documents/workspace/claude-memory.git`，不设 remote（记忆里有公司信息，本仓库是公开的）。看记录：`git -C ~/.claude/projects log -p`；撤销一次改动：`git -C ~/.claude/projects revert <commit>`。
+- 测试：`python3 tests/test_memory_gate.py`。
+
+新机器：
+
+```bash
+ln -s ~/Documents/workspace/claude-config/hooks/memory-gate.py ~/.claude/hooks/memory-gate.py
+git init --separate-git-dir ~/Documents/workspace/claude-memory.git ~/.claude/projects
+printf '/*\n!/.gitignore\n!/*/\n/*/*\n!/*/memory/\n' > ~/.claude/projects/.gitignore
+```
+
 ### pstack
 
 - `~/.claude/rules` → `rules/`（整个目录软链接，`/pstack:setup-pstack` 整份重写 `pstack-models.md` 时也写进仓库）。
