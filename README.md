@@ -31,6 +31,7 @@ printf '/*\n!/.gitignore\n!/*/\n/*/*\n!/*/memory/\n' > ~/.claude/projects/.gitig
   - `pstack-effort.md`：Fable / Opus 的档位上限。
   - `pstack-external.md`：本机会话里给方案 / review 面板加 GPT、Gemini 席位，经 `pstack-ext/seat.py` 调本机 CLI。
   - `skills/sharpen`、`skills/reframe`：pstack 同名 skill 的中文版（原版写的是英文，跑出来的改写提示词也是英文）。敲 `/sharpen`、`/reframe` 走中文版，`/pstack:sharpen`、`/pstack:reframe` 仍是原版。pstack 升级后 `tests/test_pstack_zh.py` 报原文变了，就对照新原文重译，再更新测试里的版本和 hash。
+  - `ui-copy.md`：做 UI 时文案默认少写，交付前按六类删掉或下沉辅助小字（不限 pstack，所有会话都读）。
   - `pstack-web.md`：跑 pstack 改前端 / UI 前先用 modern-web-guidance 查现代原生 API（本机 skill 在 `~/.agents/skills/modern-web-guidance`，不在本仓库）。
 - `~/.claude/pstack-ext` → `pstack-ext/`：`seat.py` 用 T3 Code 装在 `~/.t3/tools` 下的 Codex / Antigravity CLI 跑一个外部席位，复用它们的登录；Gemini 席位和带 `--write` 的 GPT 席位拒绝在仓库主 checkout 里跑。
 
