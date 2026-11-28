@@ -49,6 +49,8 @@ python3 ~/.claude/pstack-ext/seat.py gemini --model gemini-4-carbon --effort hig
 
 跑完读 `--out` 的文件，它就是这个席位的交付。脚本最后会打印 `--cwd` 的 `git status`。
 
+自己的活做完、只剩等席位时，直接结束这一轮，不用 Monitor 或前台循环等：Stop hook（`hooks/wait-background-seats.py`）会把这一轮留着（侧栏显示进行中），本会话的 `seat.py` 都退出后再把你叫回来接着做。
+
 - **GPT 默认只读**：能读文件、跑命令，写不了（Codex `read-only` 沙箱，2026-11-19 实测拦住了写文件）。裁判和只看代码的审查用默认；要自己写产物的席位（如 arena runner）加 `--write`，这时 `--cwd` 必须是它自己的 worktree。
 - **Gemini 关不掉写权限**：带 `--sandbox` 照样写文件、跑命令（同日实测）。`--cwd` 必须是它自己的 git worktree，或一个上下都没有 `.git` 的目录（不带 `.git` 的副本）；主 checkout、装着仓库的父目录、git 报错的目录，脚本都拒绝（退出码 2）。带 `--write` 的 GPT 席位同样受这条检查。brief 里写明「只在当前目录内读写」；跑完看脚本打印的 `git status`，出现 brief 没要求的改动就在汇报里写明。
 - **Gemini 不能用 `--mode plan`**：它不给结论，只写一份计划文件等批准。
