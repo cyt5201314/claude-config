@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 // Checks that screens do not grow small print. Project-agnostic: each project lists its screens in ui-copy.json.
-//   node check.mjs [--config ui-copy.json] [--update]
+//   node check.mjs [--config ui-copy.json] [--update] [--cdp http://127.0.0.1:<port>]
 // Per screen it measures, within the first viewport:
 //   small       visible text pieces at or below `smallPx` (default 13px); fails above the baseline, so small print only goes down
 //   duplicates  the same number shown twice (e.g. "$71,221" as headline and again as a label); fails unless listed in `allowDuplicates`
 //   banned      words that must not appear on this screen (what belongs one level deeper); fails when present
 //   required    words that must appear (e.g. a warning only an abnormal state shows); fails when missing
+// `root` (config-wide or per screen) limits all of this to one element, e.g. "main" to leave out the app's nav bar.
 // Baselines live next to the config in ui-copy.baseline.json; --update rewrites them from this run.
 // Exit codes: 0 pass, 1 a check failed, 2 bad config or the browser could not be driven.
 import { spawn } from 'node:child_process'
@@ -22,22 +23,28 @@ function die(message) {
 }
 
 /** Runs in the page. Only text a person sees on the first screen counts. */
-const MEASURE = String(async ({ smallPx, banned, required, allowDuplicates }) => {
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-  const items = []
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+const MEASURE = String(async ({ root, smallPx, banned, required, allowDuplicates }) => {
+  // Let the last setup step paint. Not requestAnimationFrame: it never fires while the window is in the background.
+  await new Promise((r) => setTimeout(r, 100))
+  const scope = document.querySelector(root)
+  if (!scope) throw new Error(`找不到 root：${root}`)
+  // One item per element: frameworks split "在 {name} 打开" into several text nodes that read as one piece.
+  const byElement = new Map()
+  const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT)
   for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-    const text = node.textContent.replace(/\s+/g, ' ').trim()
     const el = node.parentElement
-    if (!text || !el || el.closest('[hidden], script, style, noscript, template, [aria-hidden="true"]')) continue
+    if (!node.textContent.trim() || !el || el.closest('[hidden], script, style, noscript, template, [aria-hidden="true"]')) continue
     const style = getComputedStyle(el)
     if (style.visibility !== 'visible' || el.checkVisibility?.({ opacityProperty: true }) === false) continue
     const range = document.createRange()
     range.selectNodeContents(node)
     const r = range.getBoundingClientRect()
     if (!r.width || !r.height || r.bottom <= 0 || r.top >= innerHeight || r.right <= 0 || r.left >= innerWidth) continue
-    items.push({ text, px: parseFloat(style.fontSize) })
+    const item = byElement.get(el) ?? { text: '', px: parseFloat(style.fontSize) }
+    item.text += node.textContent
+    byElement.set(el, item)
   }
+  const items = [...byElement.values()].map((i) => ({ ...i, text: i.text.replace(/\s+/g, ' ').trim() }))
   const counts = new Map()
   for (const { text } of items) {
     for (const [n] of text.matchAll(/[$€¥£]?\d[\d,]*(?:\.\d+)?%?/g)) {
@@ -142,14 +149,16 @@ async function main() {
   const args = process.argv.slice(2)
   const configPath = resolve(args.includes('--config') ? args[args.indexOf('--config') + 1] : 'ui-copy.json')
   const update = args.includes('--update')
+  const cdpArg = args.includes('--cdp') ? args[args.indexOf('--cdp') + 1] : undefined
   const config = loadConfig(configPath)
   const baselinePath = join(dirname(configPath), 'ui-copy.baseline.json')
   const baseline = existsSync(baselinePath) ? JSON.parse(readFileSync(baselinePath, 'utf8')) : {}
   const viewport = config.viewport ?? { width: 1280, height: 800 }
 
-  // `cdp` attaches to a running browser or Electron app instead of launching Chrome.
-  const chrome = config.cdp ? null : await launchChrome()
-  const page = await Page.open(await pageTarget(config.cdp ?? chrome.endpoint))
+  // `cdp` (config or --cdp, e.g. a test run's dynamic port) attaches to a running browser or Electron app instead of launching Chrome.
+  const cdp = cdpArg ?? config.cdp
+  const chrome = cdp ? null : await launchChrome()
+  const page = await Page.open(await pageTarget(cdp ?? chrome.endpoint))
   const results = {}
   let failed = false
   try {
@@ -159,7 +168,7 @@ async function main() {
       if (s.url) await page.goto(new URL(s.url, `file://${dirname(configPath)}/`).href)
       if (s.setup) await page.evaluate(`(async () => { ${s.setup} })()`)
       const m = await page.evaluate(
-        `(${MEASURE})(${JSON.stringify({ smallPx: config.smallPx ?? 13, banned: s.banned ?? [], required: s.required ?? [], allowDuplicates: s.allowDuplicates ?? [] })})`,
+        `(${MEASURE})(${JSON.stringify({ root: s.root ?? config.root ?? 'body', smallPx: config.smallPx ?? 13, banned: s.banned ?? [], required: s.required ?? [], allowDuplicates: s.allowDuplicates ?? [] })})`,
       )
       results[s.name] = m
       const limit = baseline[s.name]?.small

@@ -30,7 +30,7 @@ test('passes at the baseline and fails when small print grows', () => {
   assert.equal(run([{ name: 's', url: fixture('clean.html') }], { baseline }).code, 0)
   const r = run([{ name: 's', url: fixture('noisy.html'), allowDuplicates: ['$71,221'] }], { baseline })
   assert.equal(r.code, 1)
-  assert.match(r.out, /小字 4 条，超过基线 1/)
+  assert.match(r.out, /小字 5 条，超过基线 1/)
 })
 
 test('says when the baseline can come down', () => {
@@ -56,6 +56,16 @@ test('banned words must be absent and required words present', () => {
   assert.match(r.out, /不该出现：HF/)
   assert.doesNotMatch(r.out, /不该出现：Passphrase/)
   assert.match(r.out, /应该出现：刷新失败/)
+})
+
+test('root limits the check to one element', () => {
+  const base = { name: 's', url: fixture('noisy.html'), allowDuplicates: ['$71,221'], banned: ['导航'] }
+  const whole = run([base], { update: true })
+  assert.equal(whole.saved.s.small, 5)
+  assert.match(whole.out, /不该出现：导航/)
+  const main = run([{ ...base, root: 'main' }], { update: true })
+  assert.equal(main.saved.s.small, 4)
+  assert.doesNotMatch(main.out, /不该出现/)
 })
 
 test('a screen without a baseline fails until --update', () => {
